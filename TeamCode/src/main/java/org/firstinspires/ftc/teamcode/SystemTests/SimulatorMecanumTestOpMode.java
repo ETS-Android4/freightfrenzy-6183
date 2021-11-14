@@ -1,9 +1,8 @@
 package org.firstinspires.ftc.teamcode.SystemTests;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+//import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,8 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 @TeleOp
-@Config
-public class MecanumTestOpMode extends LinearOpMode
+@Disabled
+public class SimulatorMecanumTestOpMode extends LinearOpMode
 {
     public double leftStickY;
     public double leftStickX;
@@ -51,29 +50,29 @@ public class MecanumTestOpMode extends LinearOpMode
     private String turnState = "auto";
 
     private enum driveMode {
-        DRIVER_CONTROLLED,
-        AUTO_CONTROL
+        AUTO_CONTROL,
+        DRIVER_CONTROLLED
     }
 
-    private driveMode driveState = driveMode.AUTO_CONTROL;
+    private driveMode driveState = driveMode.DRIVER_CONTROLLED;
 
     private final ElapsedTime eTime = new ElapsedTime();
 
+    //FtcDashboard dashboard = FtcDashboard.getInstance();
+
     @Override
     public void runOpMode() {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample op mode
-        parameters.mode = BNO055IMU.SensorMode.IMU;
+        // parameters.mode = BNO055IMU.SensorMode.IMU;
         // parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        fr = hardwareMap.get(DcMotor.class, "frMotor");
-        rr = hardwareMap.get(DcMotor.class, "rrMotor");
-        fl = hardwareMap.get(DcMotor.class, "flMotor");
-        rl = hardwareMap.get(DcMotor.class, "rlMotor");
+        fr = hardwareMap.get(DcMotor.class, "front_right_motor");
+        rr = hardwareMap.get(DcMotor.class, "back_right_motor");
+        fl = hardwareMap.get(DcMotor.class, "front_left_motor");
+        rl = hardwareMap.get(DcMotor.class, "back_left_motor");
 
         fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -81,13 +80,14 @@ public class MecanumTestOpMode extends LinearOpMode
         rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         fl.setDirection(DcMotor.Direction.REVERSE);
-        fr.setDirection(DcMotor.Direction.REVERSE);
+        //fr.setDirection(DcMotor.Direction.REVERSE);
         rl.setDirection(DcMotor.Direction.REVERSE);
+        //rr.setDirection(DcMotor.Direction.REVERSE);
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
-        imu.startAccelerationIntegration(null, null, 1000);
+        //imu.startAccelerationIntegration(null, null, 1000);
 
         telemetry.addData("Mode", "waiting for start");
         telemetry.update();
@@ -189,8 +189,10 @@ public class MecanumTestOpMode extends LinearOpMode
                     driveState = driveMode.DRIVER_CONTROLLED;
                 }
                 turnState = "auto";
+                telemetry.addData("bruh", "bruh");
                 //denominator = Math.max(Math.abs(newForward) + Math.abs(newStrafe) + Math.abs(rcw), 1);
                 FL_power = (newForward + newStrafe + rcw);// / denominator;
+                telemetry.addData("reajbruh", FL_power);
                 RL_power = (newForward - newStrafe + rcw);// / denominator;
                 FR_power = (newForward - newStrafe - rcw);// / denominator;
                 RR_power = (newForward + newStrafe - rcw);// / denominator;
