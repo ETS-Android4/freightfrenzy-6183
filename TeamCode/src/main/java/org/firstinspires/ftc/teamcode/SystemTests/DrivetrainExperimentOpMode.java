@@ -4,17 +4,16 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name="Intake Test", group="test")
-public class IntakeOpMode extends LinearOpMode {
+@TeleOp(name="Drivetrain Experiment", group="test")
+public class DrivetrainExperimentOpMode extends LinearOpMode {
 
-    private DcMotor intake1;
-    private DcMotor intake2;
+    private DcMotor fl;
+    private DcMotor bl;
 
     @Override
-    public void runOpMode()
-    {
-        intake1 = hardwareMap.get(DcMotor.class, "m1");
-        intake2 = hardwareMap.get(DcMotor.class, "m2");
+    public void runOpMode() {
+        fl = hardwareMap.get(DcMotor.class, "m1");
+        bl = hardwareMap.get(DcMotor.class, "m2");
 
         telemetry.addData("Mode", "waiting for start");
         telemetry.update();
@@ -25,10 +24,9 @@ public class IntakeOpMode extends LinearOpMode {
         telemetry.addData("Mode", "running");
         telemetry.update();
 
-        while (opModeIsActive())
-        {
-            intake1.setPower(gamepad1.right_trigger);
-            intake2.setPower(gamepad1.right_trigger);
+        while (opModeIsActive()) {
+            fl.setPower(gamepad1.right_stick_y);
+            bl.setPower(-gamepad1.right_stick_y);
         }
     }
 }
