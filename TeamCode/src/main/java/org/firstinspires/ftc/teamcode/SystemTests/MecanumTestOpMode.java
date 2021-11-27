@@ -29,7 +29,11 @@ public class MecanumTestOpMode extends LinearOpMode
     public static double P = 0.04;
     public static double I = 0;
     public static double D = 0;
-    public static double rsGain = 3;
+
+    public static double carouselPower = 0.26;
+    public static double brakingTime = 1;
+    public static int carouselEncoder = 400;
+    public static double fastTime = 0.4;
 
     private double integral, previous_error = 0;
 
@@ -37,11 +41,14 @@ public class MecanumTestOpMode extends LinearOpMode
     public double newStrafe;
     public double denominator;
 
+    private int carouselStartPos = 0, carouselSavedPos = 0;
+
     private BNO055IMU imu;
     private DcMotor fr;
     private DcMotor rr;
     private DcMotor fl;
     private DcMotor rl;
+    private DcMotor c;
 
     public Orientation angles;
 
@@ -55,8 +62,18 @@ public class MecanumTestOpMode extends LinearOpMode
         AUTO_CONTROL
     }
 
+    private enum carouselMode {
+        BRAKING,
+        IDLE,
+        SLOW,
+        FAST
+    }
+
     private driveMode driveState = driveMode.AUTO_CONTROL;
 
+    private carouselMode carouselState = carouselMode.IDLE;
+
+    private final ElapsedTime carouselTime = new ElapsedTime();
     private final ElapsedTime eTime = new ElapsedTime();
 
     @Override
@@ -74,15 +91,21 @@ public class MecanumTestOpMode extends LinearOpMode
         rr = hardwareMap.get(DcMotor.class, "rrMotor");
         fl = hardwareMap.get(DcMotor.class, "flMotor");
         rl = hardwareMap.get(DcMotor.class, "rlMotor");
+        c = hardwareMap.get(DcMotor.class, "carousel");
 
         fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        c.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         fl.setDirection(DcMotor.Direction.REVERSE);
         fr.setDirection(DcMotor.Direction.REVERSE);
         rl.setDirection(DcMotor.Direction.REVERSE);
+
+        c.setDirection(DcMotor.Direction.REVERSE);
+
+        carouselStartPos = c.getCurrentPosition();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
@@ -115,7 +138,7 @@ public class MecanumTestOpMode extends LinearOpMode
     public void getJoyValues() {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-        leftStickY = -gamepad1.left_stick_y;
+        leftStickY = gamepad1.left_stick_y;
         leftStickX = gamepad1.left_stick_x * 1.1;
         rightStickX = gamepad1.right_stick_x;
 
@@ -130,16 +153,6 @@ public class MecanumTestOpMode extends LinearOpMode
     public void holonomicFormula() {
         double time = eTime.time();
         getJoyValues();
-
-        /*
-        desiredAngle = desiredAngle + -(rsGain * gamepad1.right_stick_x);
-
-        if (desiredAngle < -180) {
-            desiredAngle += 360;
-        } else if (desiredAngle > 180) {
-            desiredAngle -= 360;
-        }
-         */
 
         if (desiredAngle - angles.firstAngle < 0) {
             errorMin = Math.min(Math.abs(desiredAngle - angles.firstAngle), Math.abs(desiredAngle - angles.firstAngle + 360));
@@ -168,6 +181,7 @@ public class MecanumTestOpMode extends LinearOpMode
         telemetry.addData("Read angle", angles.firstAngle);
         telemetry.addData("RCW", rcw);
         telemetry.addData("Desired Angle", desiredAngle);
+        telemetry.addData("rightStickX", rightStickX);
 
         switch (driveState) {
             case AUTO_CONTROL:
@@ -185,23 +199,23 @@ public class MecanumTestOpMode extends LinearOpMode
                         desiredAngle = 90;
                     }
                 }
-                if (rightStickX != 0 || error==0) {
+                if (rightStickX != 0) {
                     driveState = driveMode.DRIVER_CONTROLLED;
                 }
                 turnState = "auto";
                 //denominator = Math.max(Math.abs(newForward) + Math.abs(newStrafe) + Math.abs(rcw), 1);
-                FL_power = (newForward + newStrafe + rcw);// / denominator;
-                RL_power = (newForward - newStrafe + rcw);// / denominator;
-                FR_power = (newForward - newStrafe - rcw);// / denominator;
-                RR_power = (newForward + newStrafe - rcw);// / denominator;
+                FL_power = (-newForward + newStrafe + rcw);// / denominator;
+                RL_power = (-newForward - newStrafe + rcw);// / denominator;
+                FR_power = (-newForward - newStrafe - rcw);// / denominator;
+                RR_power = (-newForward + newStrafe - rcw);// / denominator;
                 break;
             case DRIVER_CONTROLLED:
                 turnState = "driver";
                 denominator = Math.max(Math.abs(newForward) + Math.abs(newStrafe) + Math.abs(rightStickX), 1);
-                FL_power = (newForward + newStrafe + rightStickX) / denominator;
-                RL_power = (newForward - newStrafe + rightStickX) / denominator;
-                FR_power = (newForward - newStrafe - rightStickX) / denominator;
-                RR_power = (newForward + newStrafe - rightStickX) / denominator;
+                FL_power = (-newForward + newStrafe + rightStickX) / denominator;
+                RL_power = (-newForward - newStrafe + rightStickX) / denominator;
+                FR_power = (-newForward - newStrafe - rightStickX) / denominator;
+                RR_power = (-newForward + newStrafe - rightStickX) / denominator;
                 if (!gamepad1.right_bumper) {
                     if (gamepad1.dpad_up) {
                         desiredAngle = 0;
@@ -236,6 +250,49 @@ public class MecanumTestOpMode extends LinearOpMode
         telemetry.addData("FRpower", FR_power);
         telemetry.addData("RLpower", RL_power);
         telemetry.addData("RRpower", RR_power);
+
+        switch (carouselState) {
+            case BRAKING:
+                if (carouselTime.time()<brakingTime && gamepad1.b) {
+                    c.setPower(0);
+                } else {
+                    carouselState = carouselMode.IDLE;
+                }
+                break;
+            case IDLE:
+                c.setPower(0);
+                carouselStartPos = c.getCurrentPosition();
+                if (gamepad1.b) {
+                    carouselState = carouselMode.SLOW;
+                }
+                break;
+            case SLOW:
+                if (gamepad1.b) {
+                    if (Math.abs(c.getCurrentPosition()-carouselStartPos) < carouselEncoder) {
+                        c.setPower(carouselPower);
+                    } else {
+                        carouselState = carouselMode.FAST;
+                        carouselTime.reset();
+                    }
+                } else {
+                    carouselState = carouselMode.IDLE;
+                }
+                break;
+            case FAST:
+                if (gamepad1.b) {
+                    if (carouselTime.time()<fastTime) {
+                        c.setPower(1);
+                    } else {
+                        carouselState = carouselMode.BRAKING;
+                        carouselTime.reset();
+                    }
+                } else {
+                    carouselState = carouselMode.IDLE;
+                }
+                break;
+        }
+
+        telemetry.addData("carouselPos", c.getCurrentPosition()-carouselStartPos);
 
         fl.setPower(FL_power);
         fr.setPower(FR_power);
