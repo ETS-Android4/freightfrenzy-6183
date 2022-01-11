@@ -8,13 +8,16 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 public class IntakeOpMode extends LinearOpMode {
 
     private DcMotor intake1;
-    private DcMotor intake2;
+    private int initialPos;
+    //private DcMotor intake2;
 
     @Override
     public void runOpMode()
     {
-        intake1 = hardwareMap.get(DcMotor.class, "m1");
-        intake2 = hardwareMap.get(DcMotor.class, "m2");
+        intake1 = hardwareMap.get(DcMotor.class, "elevator");
+        //intake2 = hardwareMap.get(DcMotor.class, "m2");
+
+        initialPos = intake1.getCurrentPosition();
 
         telemetry.addData("Mode", "waiting for start");
         telemetry.update();
@@ -27,8 +30,17 @@ public class IntakeOpMode extends LinearOpMode {
 
         while (opModeIsActive())
         {
-            intake1.setPower(gamepad1.right_trigger);
-            intake2.setPower(gamepad1.right_trigger);
+            intake1.setPower(gamepad1.right_trigger-gamepad1.left_trigger);
+
+            telemetry.addData("rightTrigger", gamepad1.right_trigger);
+            telemetry.addData("leftTrigger", gamepad1.left_trigger);
+
+            telemetry.addData("currentPos", intake1.getCurrentPosition());
+            telemetry.addData("positionDelta", intake1.getCurrentPosition()-initialPos);
+
+            telemetry.update();
+
+            //intake2.setPower(gamepad1.right_trigger);
         }
     }
 }

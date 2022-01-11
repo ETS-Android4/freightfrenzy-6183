@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.Dreamville.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -34,13 +33,6 @@ public class Carousel {
     private final ElapsedTime carouselTime = new ElapsedTime();
 
     public void init(HardwareMap hardwareMap) {
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample op mode
-        parameters.mode = BNO055IMU.SensorMode.IMU;
-        // parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
         c = hardwareMap.get(DcMotor.class, "carousel");
         c.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         c.setDirection(DcMotor.Direction.REVERSE);

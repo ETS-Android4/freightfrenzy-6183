@@ -100,8 +100,6 @@ public class MecanumTestOpMode extends LinearOpMode
         c.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         fl.setDirection(DcMotor.Direction.REVERSE);
-        fr.setDirection(DcMotor.Direction.REVERSE);
-        rl.setDirection(DcMotor.Direction.REVERSE);
 
         c.setDirection(DcMotor.Direction.REVERSE);
 

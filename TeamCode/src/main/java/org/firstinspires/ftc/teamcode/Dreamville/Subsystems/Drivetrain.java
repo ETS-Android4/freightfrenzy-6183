@@ -70,8 +70,6 @@ public class Drivetrain {
         rr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         fl.setDirection(DcMotor.Direction.REVERSE);
-        fr.setDirection(DcMotor.Direction.REVERSE);
-        rl.setDirection(DcMotor.Direction.REVERSE);
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
