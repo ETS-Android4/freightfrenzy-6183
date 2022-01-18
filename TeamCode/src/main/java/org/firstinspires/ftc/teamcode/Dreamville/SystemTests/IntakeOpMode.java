@@ -15,8 +15,11 @@ public class IntakeOpMode extends LinearOpMode {
     public void runOpMode()
     {
         intake1 = hardwareMap.get(DcMotor.class, "elevator");
+        intake1.setDirection(DcMotor.Direction.REVERSE);
+        intake1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //intake2 = hardwareMap.get(DcMotor.class, "m2");
 
+        intake1.setDirection(DcMotor.Direction.REVERSE);
         initialPos = intake1.getCurrentPosition();
 
         telemetry.addData("Mode", "waiting for start");

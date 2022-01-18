@@ -9,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Config
 public class Carousel {
-    private boolean g1b;
+    private boolean g1rb;
     private Telemetry telemetry;
 
     public static double carouselPower = 0.26;
@@ -40,8 +40,8 @@ public class Carousel {
         carouselStartPos = c.getCurrentPosition();
     }
 
-    public void spin(boolean g1b, Telemetry telemetry) {
-        this.g1b = g1b;
+    public void spin(boolean g1rb, Telemetry telemetry) {
+        this.g1rb = g1rb;
 
         this.telemetry = telemetry;
 
@@ -51,7 +51,7 @@ public class Carousel {
     public void spinFormula() {
         switch (carouselState) {
             case BRAKING:
-                if (carouselTime.time()<brakingTime && g1b) {
+                if (carouselTime.time()<brakingTime && g1rb) {
                     c.setPower(0);
                 } else {
                     carouselState = carouselMode.IDLE;
@@ -60,12 +60,12 @@ public class Carousel {
             case IDLE:
                 c.setPower(0);
                 carouselStartPos = c.getCurrentPosition();
-                if (g1b) {
+                if (g1rb) {
                     carouselState = carouselMode.SLOW;
                 }
                 break;
             case SLOW:
-                if (g1b) {
+                if (g1rb) {
                     if (Math.abs(c.getCurrentPosition()-carouselStartPos) < carouselEncoder) {
                         c.setPower(carouselPower);
                     } else {
@@ -77,7 +77,7 @@ public class Carousel {
                 }
                 break;
             case FAST:
-                if (g1b) {
+                if (g1rb) {
                     if (carouselTime.time()<fastTime) {
                         c.setPower(1);
                     } else {

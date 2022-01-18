@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class ServoTestOpMode extends LinearOpMode {
 
     private Servo ls, rs;
-    private boolean oldg1a = false, oldg1b = false;
+    private boolean oldg1a = false, oldg1b = false, oldg1y = false, oldg1x = false;
 
     @Override
     public void runOpMode()
@@ -16,7 +16,8 @@ public class ServoTestOpMode extends LinearOpMode {
         ls = hardwareMap.get(Servo.class, "ls");
         rs = hardwareMap.get(Servo.class, "rs");
 
-        rs.setPosition(0);
+        rs.setPosition(1);
+        ls.setPosition(0.2);
 
         telemetry.addData("Mode", "waiting for start");
         telemetry.update();
@@ -31,9 +32,25 @@ public class ServoTestOpMode extends LinearOpMode {
             telemetry.addData("lsPos", ls.getPosition());
             telemetry.addData("rsPos", rs.getPosition());
 
+            if (gamepad1.y && !oldg1y) {
+                rs.setPosition(0.4);
+                ls.setPosition(0.8);
+                oldg1y = true;
+            } else if (!gamepad1.y) {
+                oldg1y = false;
+            }
+
+            if (gamepad1.x && !oldg1x) {
+                rs.setPosition(1);
+                ls.setPosition(0.2);
+                oldg1x = true;
+            } else if (!gamepad1.x) {
+                oldg1x = false;
+            }
+
             if (gamepad1.a && !oldg1a) {
-                if (rs.getPosition()<=0.9) {
-                    rs.setPosition(rs.getPosition()+0.1);
+                if (ls.getPosition()<=0.9) {
+                    ls.setPosition(ls.getPosition()+0.1);
                     oldg1a = true;
                 }
             } else if (!gamepad1.a) {
@@ -41,8 +58,8 @@ public class ServoTestOpMode extends LinearOpMode {
             }
 
             if (gamepad1.b && !oldg1b) {
-                if (rs.getPosition()>=0.1) {
-                    rs.setPosition(rs.getPosition()-0.1);
+                if (ls.getPosition()>=0.1) {
+                    ls.setPosition(ls.getPosition()-0.1);
                     oldg1b = true;
                 }
             } else if (!gamepad1.b) {
