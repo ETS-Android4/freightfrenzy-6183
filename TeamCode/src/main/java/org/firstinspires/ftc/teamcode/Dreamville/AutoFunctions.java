@@ -33,6 +33,7 @@ public class AutoFunctions extends LinearOpMode {
 
     private OpenCvCamera camera;
 
+    @Override
     public void runOpMode() {
         c = hardwareMap.get(DcMotor.class, "carousel");
 

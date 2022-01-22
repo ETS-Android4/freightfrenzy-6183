@@ -105,9 +105,6 @@ public class Intake {
                 }
                 if (ltHeld && g1lt==0) {
                     ltHeld = false;
-                    ltTimer.reset();
-                }
-                if (!ltHeld && ltTimer.time()>ltDelay) {
                     elevatorState = elevatorMode.BOTTOM;
                 }
                 break;
@@ -128,9 +125,6 @@ public class Intake {
                 }
                 if (ltHeld && g1lt==0) {
                     ltHeld = false;
-                    ltTimer.reset();
-                }
-                if (!ltHeld && ltTimer.time()>ltDelay) {
                     elevatorState = elevatorMode.BOTTOM;
                 }
                 break;
