@@ -27,7 +27,7 @@ public class AutoTester extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
 
             if (gamepad1.a) {
-                carousel.spin();
+                elevator.goToTop();
             }
 
             if (gamepad1.b) {
@@ -35,10 +35,22 @@ public class AutoTester extends LinearOpMode {
             }
 
             if (gamepad1.y) {
-                intake.deposit();
+                elevator.goToBottom();
             }
 
             if (gamepad1.x) {
+                elevator.goToGround();
+            }
+
+            if (gamepad1.right_bumper) {
+                intake.intake();
+            }
+
+            if (gamepad1.left_bumper) {
+                intake.deposit();
+            }
+
+            if (gamepad1.dpad_left) {
                 intake.stop();
             }
 
@@ -51,6 +63,10 @@ public class AutoTester extends LinearOpMode {
             packet.putAll(carousel.getTelemetry());
             packet.putAll(elevator.getTelemetry());
             packet.putAll(intake.getTelemetry());
+
+            packet.put("elevatorBusy", elevator.isBusy());
+            packet.put("carouselBusy", carousel.isBusy());
+            packet.put("intakeBusy", intake.isBusy());
 
             dashboard.sendTelemetryPacket(packet);
         }
