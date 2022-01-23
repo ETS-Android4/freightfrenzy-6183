@@ -19,7 +19,7 @@ public class AutoIntake {
     private static DcMotor intake;
     private static RevColorSensorV3 colorSensor;
     public static double ltDivisor = 2;
-    public static double stuckPower = 0.05;
+    public static double stuckPower = 0.20;
     public static double stuckTime = 0.5;
     private static boolean stuck = false;
 
