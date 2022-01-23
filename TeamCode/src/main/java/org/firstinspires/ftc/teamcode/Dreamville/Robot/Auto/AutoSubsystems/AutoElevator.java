@@ -20,14 +20,6 @@ public class AutoElevator {
     private static int error = 0;
 
     private static DcMotor elevator;
-
-    private enum elevatorMode {
-        GROUND,
-        BOTTOM,
-        MIDDLE,
-        TOP
-    }
-
     private elevatorMode elevatorState = elevatorMode.BOTTOM;
 
     public AutoElevator(HardwareMap hardwareMap) {
@@ -86,7 +78,14 @@ public class AutoElevator {
         return Math.abs(error) >= errorTolerance;
     }
 
-    public Map<String,Object> getTelemetry() {
+    public Map<String, Object> getTelemetry() {
         return telemetry;
+    }
+
+    private enum elevatorMode {
+        GROUND,
+        BOTTOM,
+        MIDDLE,
+        TOP
     }
 }

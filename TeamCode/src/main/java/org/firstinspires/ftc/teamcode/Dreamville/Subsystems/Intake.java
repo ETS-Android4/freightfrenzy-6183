@@ -1,59 +1,43 @@
 package org.firstinspires.ftc.teamcode.Dreamville.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Config
 public class Intake {
-    public static boolean intakeForward = true;
-    public static int bottomPos = -500;
-    public static int middlePos = -1900;
-    public static int topPos = -2500;
-    public static double P = 0.005;
     public static double ltDivisor = 2;
-    public static double ltDelay = 0.5;
-
-    private int error = 0;
-    private double pwr = 0;
 
     private double g1rt, g1lt;
-    private boolean g1y, g1b, g1a, g1rb;
     private Telemetry telemetry;
 
-    private DcMotor intake, elevator;
+    private static DcMotor intake;
+    private static RevColorSensorV3 colorSensor;
 
-    private boolean ltHeld = false;
-    private ElapsedTime ltTimer = new ElapsedTime();
-
-    private enum elevatorMode {
-        GROUND,
-        BOTTOM,
-        MIDDLE,
-        TOP
+    private enum intakeMode {
+        INTAKE,
+        DEPOSIT,
+        STOP,
+        COLOR
     }
 
-    private elevatorMode elevatorState = elevatorMode.BOTTOM;
+    private intakeMode intakeState = intakeMode.STOP;
 
-    public void init(HardwareMap hardwareMap) {
+    public Intake(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotor.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        elevator = hardwareMap.get(DcMotor.class, "elevator");
-        elevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        elevator.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        colorSensor = hardwareMap.get(RevColorSensorV3.class, "sensor_color");
     }
 
-    public void intake(double g1rt, double g1lt, boolean g1y, boolean g1b, boolean g1a, Telemetry telemetry) {
+    public void intake(double g1rt, double g1lt, Telemetry telemetry) {
         this.g1rt = g1rt;
         this.g1lt = g1lt;
-        this.g1y = g1y;
-        this.g1b = g1b;
-        this.g1a = g1a;
 
         this.telemetry = telemetry;
 
@@ -61,71 +45,51 @@ public class Intake {
     }
 
     public void controls() {
-        telemetry.addData("elevator error", error);
-        telemetry.addData("elevator power", pwr);
+        double distance = ((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM);
 
-        intake.setPower(g1rt-(g1lt/ltDivisor));
+        telemetry.addData("Distance (cm)", "%.3f", distance);
 
-        switch (elevatorState) {
-            case GROUND:
-                pwr = P * -elevator.getCurrentPosition();
-                elevator.setPower(pwr);
-                if (g1rt==0) {
-                    elevatorState = elevatorMode.BOTTOM;
+        switch (intakeState) {
+            case STOP:
+                intake.setPower(0);
+                if (g1rt!=0) {
+                    if (distance > 4.5) {
+                        intakeState = intakeMode.INTAKE;
+                    }
+                } else if (g1lt!=0) {
+                    if (distance < 4.5) {
+                        intakeState = intakeMode.DEPOSIT;
+                    }
                 }
                 break;
-            case BOTTOM:
-                error = bottomPos - elevator.getCurrentPosition();
-                pwr = P * error;
-                elevator.setPower(pwr);
-                if (g1rt>0) {
-                    elevatorState = elevatorMode.GROUND;
+            case INTAKE:
+                intake.setPower(g1rt);
+                if (distance < 4.5) {
+                    intakeState = intakeMode.COLOR;
                 }
-                if (g1y) {
-                    elevatorState = elevatorMode.TOP;
-                } else if (g1b) {
-                    elevatorState = elevatorMode.MIDDLE;
+                if (g1rt == 0) {
+                    intakeState = intakeMode.STOP;
                 }
-                break;
-            case MIDDLE:
-                error = middlePos - elevator.getCurrentPosition();
-                pwr = P * error;
-                elevator.setPower(pwr);
-                if (g1rt>0) {
-                    elevatorState = elevatorMode.GROUND;
-                }
-                if (g1y) {
-                    elevatorState = elevatorMode.TOP;
-                } else if (g1a) {
-                    elevatorState = elevatorMode.BOTTOM;
-                }
-                if (g1lt>0) {
-                    ltHeld = true;
-                    ltTimer.reset();
-                }
-                if (ltHeld && g1lt==0) {
-                    ltHeld = false;
-                    elevatorState = elevatorMode.BOTTOM;
+                if (g1lt != 0) {
+                    intakeState = intakeMode.DEPOSIT;
                 }
                 break;
-            case TOP:
-                error = topPos - elevator.getCurrentPosition();
-                pwr = P * error;
-                elevator.setPower(pwr);
-                if (g1rt>0) {
-                    elevatorState = elevatorMode.GROUND;
+            case DEPOSIT:
+                intake.setPower(-(g1lt/ltDivisor));
+                if (distance > 4.5) {
+                    intakeState = intakeMode.COLOR;
                 }
-                if (g1a) {
-                    elevatorState = elevatorMode.BOTTOM;
-                } else if (g1b) {
-                    elevatorState = elevatorMode.MIDDLE;
+                if (g1lt == 0) {
+                    intakeState = intakeMode.STOP;
                 }
-                if (g1lt>0) {
-                    ltHeld = true;
+                if (g1rt != 0) {
+                    intakeState = intakeMode.INTAKE;
                 }
-                if (ltHeld && g1lt==0) {
-                    ltHeld = false;
-                    elevatorState = elevatorMode.BOTTOM;
+                break;
+            case COLOR:
+                intake.setPower(0);
+                if (g1lt==0 && g1rt==0) {
+                    intakeState = intakeMode.STOP;
                 }
                 break;
         }

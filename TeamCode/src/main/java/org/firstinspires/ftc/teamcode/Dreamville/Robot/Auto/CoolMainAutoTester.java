@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -19,6 +20,7 @@ public class CoolMainAutoTester extends LinearOpMode {
         TRAJECTORY_1,
         PICKUP_1,
         DEPOSIT_2,
+        PARK,
         IDLE            // Our bot will enter the IDLE state when done
     }
 
@@ -40,6 +42,8 @@ public class CoolMainAutoTester extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
+        Pose2d targetQuickPose = new Pose2d(0, 0, Math.toRadians(180));
+
         drive.setPoseEstimate(startPose);
 
         TrajectorySequence trajectory1 = drive.trajectorySequenceBuilder(startPose)
@@ -50,9 +54,11 @@ public class CoolMainAutoTester extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(30, 0, Math.toRadians(0)))
                 .build();
 
+        /*
         TrajectorySequence trajectory3 = drive.trajectorySequenceBuilder(trajectory2.end())
-                .lineToLinearHeading(new Pose2d(0, 0, Math.toRadians(270)))
+                .lineToLinearHeading(new Pose2d(0, 0, Math.toRadians(180)))
                 .build();
+         */
 
         waitForStart();
 
@@ -68,6 +74,9 @@ public class CoolMainAutoTester extends LinearOpMode {
         elevator.goToBottom();
 
         while (opModeIsActive() && !isStopRequested()) {
+            Pose2d poseEstimate = drive.getPoseEstimate();
+            PoseStorage.currentPose = poseEstimate;
+
             switch (currentState) {
                 case TRAJECTORY_1:
                     if (!drive.isBusy()) {
@@ -78,9 +87,12 @@ public class CoolMainAutoTester extends LinearOpMode {
                     }
                     break;
                 case PICKUP_1:
-                    if (!drive.isBusy()) {
+                    if (!intake.isBusy()) {
                         currentState = State.DEPOSIT_2;
-                        drive.followTrajectorySequenceAsync(trajectory3);
+                        Trajectory quickTrajectory = drive.trajectoryBuilder(poseEstimate)
+                                .lineToLinearHeading(targetQuickPose)
+                                .build();
+                        drive.followTrajectoryAsync(quickTrajectory);
                         intake.stop();
                         elevator.goToTop();
                     }
@@ -88,24 +100,25 @@ public class CoolMainAutoTester extends LinearOpMode {
                 case DEPOSIT_2:
                     if (!elevator.isBusy() && !drive.isBusy()) {
                         intake.deposit();
+                        currentState = State.PARK;
+                        //eTime.reset();
+                    }
+                    break;
+                case PARK:
+                    if (!intake.isBusy()) {
+                        intake.stop();
+                        elevator.goToBottom();
+                        drive.turnAsync(Math.toRadians(180));
                         currentState = State.IDLE;
-                        eTime.reset();
                     }
                     break;
                 case IDLE:
-                    if (eTime.time() > 1) {
-                        intake.stop();
-                        elevator.goToBottom();
-                    }
                     break;
             }
 
             drive.update();
             elevator.update();
             intake.update();
-
-            Pose2d poseEstimate = drive.getPoseEstimate();
-            PoseStorage.currentPose = poseEstimate;
 
             TelemetryPacket packet = new TelemetryPacket();
 

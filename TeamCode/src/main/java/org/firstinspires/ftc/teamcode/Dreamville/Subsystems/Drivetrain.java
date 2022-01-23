@@ -32,13 +32,12 @@ public class Drivetrain {
 
     public double newForward, newStrafe, denominator;
 
-    private BNO055IMU imu;
-    private DcMotor fr, rr, fl, rl;
+    private static BNO055IMU imu;
+    private static DcMotor fr, rr, fl, rl;
 
     public Orientation angles;
 
     private double error;
-    private double errorMin;
     private double desiredAngle = 0;
     private String turnState = "auto";
 
@@ -51,7 +50,7 @@ public class Drivetrain {
 
     private final ElapsedTime eTime = new ElapsedTime();
 
-    public void init(HardwareMap hardwareMap) {
+    public Drivetrain(HardwareMap hardwareMap) {
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
@@ -113,6 +112,7 @@ public class Drivetrain {
         newForward = leftStickY * Math.cos(gyro_radians) + leftStickX * Math.sin(gyro_radians);
         newStrafe = -leftStickY * Math.sin(gyro_radians) + leftStickX * Math.cos(gyro_radians);
 
+        double errorMin;
         if (desiredAngle - angles.firstAngle < 0) {
             errorMin = Math.min(Math.abs(desiredAngle - angles.firstAngle), Math.abs(desiredAngle - angles.firstAngle + 360));
         } else {

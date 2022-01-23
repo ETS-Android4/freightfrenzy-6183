@@ -17,9 +17,9 @@ public class Carousel {
     public static int carouselEncoder = 400;
     public static double fastTime = 0.4;
 
-    private int carouselStartPos = 0, carouselSavedPos = 0;
+    private static int carouselStartPos = 0;
 
-    private DcMotor c;
+    private static DcMotor c;
 
     private enum carouselMode {
         BRAKING,
@@ -32,7 +32,7 @@ public class Carousel {
 
     private final ElapsedTime carouselTime = new ElapsedTime();
 
-    public void init(HardwareMap hardwareMap) {
+    public Carousel(HardwareMap hardwareMap) {
         c = hardwareMap.get(DcMotor.class, "carousel");
         c.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         c.setDirection(DcMotor.Direction.REVERSE);
