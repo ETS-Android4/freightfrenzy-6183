@@ -16,6 +16,8 @@ public class Intake {
     private double g1rt, g1lt;
     private Telemetry telemetry;
 
+    public static double distanceTolerance = 3.5;
+
     private static DcMotor intake;
     private static RevColorSensorV3 colorSensor;
 
@@ -53,18 +55,16 @@ public class Intake {
             case STOP:
                 intake.setPower(0);
                 if (g1rt!=0) {
-                    if (distance > 4.5) {
+                    if (distance > distanceTolerance) {
                         intakeState = intakeMode.INTAKE;
                     }
                 } else if (g1lt!=0) {
-                    if (distance < 4.5) {
-                        intakeState = intakeMode.DEPOSIT;
-                    }
+                    intakeState = intakeMode.DEPOSIT;
                 }
                 break;
             case INTAKE:
                 intake.setPower(g1rt);
-                if (distance < 4.5) {
+                if (distance < distanceTolerance) {
                     intakeState = intakeMode.COLOR;
                 }
                 if (g1rt == 0) {
@@ -75,10 +75,10 @@ public class Intake {
                 }
                 break;
             case DEPOSIT:
-                intake.setPower(-(g1lt/ltDivisor));
-                if (distance > 4.5) {
-                    intakeState = intakeMode.COLOR;
-                }
+                intake.setPower(-(g1lt / ltDivisor));
+                //if (distance > 4.5) {
+                //    intakeState = intakeMode.COLOR;
+                //}
                 if (g1lt == 0) {
                     intakeState = intakeMode.STOP;
                 }
@@ -88,7 +88,7 @@ public class Intake {
                 break;
             case COLOR:
                 intake.setPower(0);
-                if (g1lt==0 && g1rt==0) {
+                if (g1lt == 0 && g1rt == 0) {
                     intakeState = intakeMode.STOP;
                 }
                 break;

@@ -49,7 +49,7 @@ public class AutoCarousel {
                 break;
             case SLOW:
                 if (Math.abs(c.getCurrentPosition()-carouselStartPos) < carouselEncoder) {
-                    c.setPower(carouselPower);
+                    c.setPower(-carouselPower);
                 } else {
                     carouselState = carouselMode.FAST;
                     carouselTime.reset();
@@ -57,7 +57,7 @@ public class AutoCarousel {
                 break;
             case FAST:
                 if (carouselTime.time()<fastTime) {
-                    c.setPower(1);
+                    c.setPower(-1);
                 } else {
                     c.setPower(0);
                     carouselState = carouselMode.IDLE;

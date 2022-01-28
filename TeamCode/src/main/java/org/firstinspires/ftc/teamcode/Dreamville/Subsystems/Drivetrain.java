@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto.PoseStorage;
 
 @Config
 public class Drivetrain {
@@ -18,6 +20,8 @@ public class Drivetrain {
 
     private double g1lx = 0, g1ly = 0, g1rx = 0;
     private boolean g1rb, g1lb, g1dl, g1dr, g1dd, g1du;
+
+    private static Servo rs, ms, ls;
 
     public double leftStickY;
     public double leftStickX;
@@ -70,6 +74,14 @@ public class Drivetrain {
 
         fl.setDirection(DcMotor.Direction.REVERSE);
 
+        ls = hardwareMap.get(Servo.class, "ls");
+        rs = hardwareMap.get(Servo.class, "rs");
+        ms = hardwareMap.get(Servo.class, "ms");
+
+        rs.setPosition(0.4);
+        ls.setPosition(0.8);
+        ms.setPosition(0.5);
+
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
@@ -107,8 +119,8 @@ public class Drivetrain {
 
         float pi = 3.1415926f;
 
-        float gyro_degrees = angles.firstAngle;
-        float gyro_radians = gyro_degrees * pi/180;
+        double gyro_degrees = angles.firstAngle + PoseStorage.currentHeading;
+        double gyro_radians = gyro_degrees * pi / 180;
         newForward = leftStickY * Math.cos(gyro_radians) + leftStickX * Math.sin(gyro_radians);
         newStrafe = -leftStickY * Math.sin(gyro_radians) + leftStickX * Math.cos(gyro_radians);
 
@@ -146,16 +158,16 @@ public class Drivetrain {
             case AUTO_CONTROL:
                 if (!g1rb) {
                     if (g1du) {
-                        desiredAngle = 0;
+                        desiredAngle = 0 - PoseStorage.currentHeading;
                     }
                     if (g1dr) {
-                        desiredAngle = 270;
+                        desiredAngle = 270 - PoseStorage.currentHeading;
                     }
                     if (g1dd) {
-                        desiredAngle = 180;
+                        desiredAngle = 180 - PoseStorage.currentHeading;
                     }
                     if (g1dl) {
-                        desiredAngle = 90;
+                        desiredAngle = 90 - PoseStorage.currentHeading;
                     }
                 }
                 if (rightStickX != 0) {
@@ -177,19 +189,19 @@ public class Drivetrain {
                 RR_power = (-newForward + newStrafe - rightStickX) / denominator;
                 if (!g1rb) {
                     if (g1du) {
-                        desiredAngle = 0;
+                        desiredAngle = 0 - PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dr) {
-                        desiredAngle = 270;
+                        desiredAngle = 270 - PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dd) {
-                        desiredAngle = 180;
+                        desiredAngle = 180 - PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dl) {
-                        desiredAngle = 90;
+                        desiredAngle = 90 - PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                 }

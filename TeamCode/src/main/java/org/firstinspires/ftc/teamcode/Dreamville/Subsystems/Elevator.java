@@ -9,9 +9,10 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Config
 public class Elevator {
-    public static int bottomPos = -500;
-    public static int middlePos = -1900;
-    public static int topPos = -2500;
+    public static int drivingPos = -1000;
+    public static int bottomPos = -1600;
+    public static int middlePos = -3800;
+    public static int topPos = -4600;
     public static double P = 0.005;
     public static double ltDelay = 0.5;
 
@@ -32,6 +33,7 @@ public class Elevator {
         BOTTOM,
         MIDDLE,
         TOP,
+        MOVING,
         LTDELAY
     }
 
@@ -73,7 +75,7 @@ public class Elevator {
                 error = bottomPos - elevator.getCurrentPosition();
                 pwr = P * error;
                 elevator.setPower(pwr);
-                if (g1rt>0) {
+                if (g1rt > 0) {
                     elevatorState = elevatorMode.GROUND;
                 }
                 if (g1y) {
@@ -81,12 +83,20 @@ public class Elevator {
                 } else if (g1b) {
                     elevatorState = elevatorMode.MIDDLE;
                 }
+                if (g1lt > 0) {
+                    ltHeld = true;
+                }
+                if (ltHeld && g1lt == 0) {
+                    ltHeld = false;
+                    ltTimer.reset();
+                    elevatorState = elevatorMode.LTDELAY;
+                }
                 break;
             case MIDDLE:
                 error = middlePos - elevator.getCurrentPosition();
                 pwr = P * error;
                 elevator.setPower(pwr);
-                if (g1rt>0) {
+                if (g1rt > 0) {
                     elevatorState = elevatorMode.GROUND;
                 }
                 if (g1y) {
@@ -115,18 +125,33 @@ public class Elevator {
                 } else if (g1b) {
                     elevatorState = elevatorMode.MIDDLE;
                 }
-                if (g1lt>0) {
+                if (g1lt > 0) {
                     ltHeld = true;
                 }
-                if (ltHeld && g1lt==0) {
+                if (ltHeld && g1lt == 0) {
                     ltHeld = false;
                     ltTimer.reset();
                     elevatorState = elevatorMode.LTDELAY;
                 }
                 break;
+            case MOVING:
+                error = drivingPos - elevator.getCurrentPosition();
+                pwr = P * error;
+                elevator.setPower(pwr);
+                if (g1rt > 0) {
+                    elevatorState = elevatorMode.GROUND;
+                }
+                if (g1a) {
+                    elevatorState = elevatorMode.BOTTOM;
+                } else if (g1b) {
+                    elevatorState = elevatorMode.MIDDLE;
+                } else if (g1y) {
+                    elevatorState = elevatorMode.TOP;
+                }
+                break;
             case LTDELAY:
                 if (ltTimer.time() > ltDelay) {
-                    elevatorState = elevatorMode.BOTTOM;
+                    elevatorState = elevatorMode.MOVING;
                 }
                 break;
         }

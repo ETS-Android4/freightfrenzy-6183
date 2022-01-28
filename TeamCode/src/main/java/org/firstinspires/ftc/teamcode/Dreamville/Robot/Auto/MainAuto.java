@@ -16,12 +16,12 @@ public class MainAuto extends AutoFunctions {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        Pose2d startPose = new Pose2d(-23, 62.5, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(-23.75, 62.75, Math.toRadians(270));
 
         drive.setPoseEstimate(startPose);
 
         TrajectorySequence trajectory1 = drive.trajectorySequenceBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-54, 59, Math.toRadians(0)), Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(-51, 56, Math.toRadians(0)), Math.toRadians(180))
                 .build();
 
         TrajectorySequence trajectory2 = drive.trajectorySequenceBuilder(trajectory1.end())
@@ -32,30 +32,30 @@ public class MainAuto extends AutoFunctions {
         TrajectorySequence trajectory3 = drive.trajectorySequenceBuilder(trajectory2.end())
                 .lineToConstantHeading(new Vector2d(-30, 16))
                 .splineToConstantHeading(new Vector2d(10, 16), Math.toRadians(90))
-                .lineToConstantHeading(new Vector2d(10, 62))
-                .lineToConstantHeading(new Vector2d(56, 62))
+                .lineToConstantHeading(new Vector2d(10, 64))
+                .lineToConstantHeading(new Vector2d(56, 64))
                 .build();
 
         TrajectorySequence trajectory4 = drive.trajectorySequenceBuilder(trajectory3.end())
-                .lineToConstantHeading(new Vector2d(18, 62))
+                .lineToConstantHeading(new Vector2d(18, 64))
                 .splineToConstantHeading(new Vector2d(10, 60), Math.toRadians(270))
                 .splineToSplineHeading(new Pose2d(7, 24, Math.toRadians(180)), Math.toRadians(270))
                 .build();
 
         TrajectorySequence trajectory5 = drive.trajectorySequenceBuilder(trajectory4.end())
-                .splineToSplineHeading(new Pose2d(10, 62, Math.toRadians(0)), Math.toRadians(90))
-                .lineToConstantHeading(new Vector2d(56, 62))
+                .splineToSplineHeading(new Pose2d(10, 64, Math.toRadians(0)), Math.toRadians(90))
+                .lineToConstantHeading(new Vector2d(56, 64))
                 .build();
 
         TrajectorySequence trajectory6 = drive.trajectorySequenceBuilder(trajectory5.end())
-                .lineToConstantHeading(new Vector2d(18, 62))
+                .lineToConstantHeading(new Vector2d(18, 64))
                 .splineToConstantHeading(new Vector2d(10, 60), Math.toRadians(270))
                 .splineToSplineHeading(new Pose2d(7, 24, Math.toRadians(180)), Math.toRadians(270))
                 .build();
 
         TrajectorySequence park = drive.trajectorySequenceBuilder(trajectory6.end())
-                .splineToSplineHeading(new Pose2d(10, 62, Math.toRadians(0)), Math.toRadians(90))
-                .lineToConstantHeading(new Vector2d(40, 62))
+                .splineToSplineHeading(new Pose2d(10, 64, Math.toRadians(0)), Math.toRadians(90))
+                .lineToConstantHeading(new Vector2d(40, 64))
                 .build();
 
         waitForStart();

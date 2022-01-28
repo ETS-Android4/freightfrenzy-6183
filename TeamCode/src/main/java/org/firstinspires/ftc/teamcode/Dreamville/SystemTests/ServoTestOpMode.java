@@ -4,20 +4,21 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name="Servo Test", group="test")
+@TeleOp(name = "Servo Test", group = "test")
 public class ServoTestOpMode extends LinearOpMode {
 
-    private Servo ls, rs;
+    private Servo ls, rs, ms;
     private boolean oldg1a = false, oldg1b = false, oldg1y = false, oldg1x = false;
 
     @Override
-    public void runOpMode()
-    {
+    public void runOpMode() {
         ls = hardwareMap.get(Servo.class, "ls");
         rs = hardwareMap.get(Servo.class, "rs");
+        ms = hardwareMap.get(Servo.class, "ms");
 
-        rs.setPosition(1);
-        ls.setPosition(0.2);
+        rs.setPosition(0.4);
+        ls.setPosition(0.8);
+        ms.setPosition(0.5);
 
         telemetry.addData("Mode", "waiting for start");
         telemetry.update();
@@ -35,6 +36,7 @@ public class ServoTestOpMode extends LinearOpMode {
             if (gamepad1.y && !oldg1y) {
                 rs.setPosition(0.4);
                 ls.setPosition(0.8);
+                ms.setPosition(0.5);
                 oldg1y = true;
             } else if (!gamepad1.y) {
                 oldg1y = false;
@@ -43,6 +45,7 @@ public class ServoTestOpMode extends LinearOpMode {
             if (gamepad1.x && !oldg1x) {
                 rs.setPosition(1);
                 ls.setPosition(0.2);
+                ms.setPosition(1);
                 oldg1x = true;
             } else if (!gamepad1.x) {
                 oldg1x = false;

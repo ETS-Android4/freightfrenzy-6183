@@ -67,7 +67,7 @@ public class Carousel {
             case SLOW:
                 if (g1rb) {
                     if (Math.abs(c.getCurrentPosition()-carouselStartPos) < carouselEncoder) {
-                        c.setPower(carouselPower);
+                        c.setPower(-carouselPower);
                     } else {
                         carouselState = carouselMode.FAST;
                         carouselTime.reset();
@@ -79,7 +79,7 @@ public class Carousel {
             case FAST:
                 if (g1rb) {
                     if (carouselTime.time()<fastTime) {
-                        c.setPower(1);
+                        c.setPower(-1);
                     } else {
                         carouselState = carouselMode.BRAKING;
                         carouselTime.reset();
