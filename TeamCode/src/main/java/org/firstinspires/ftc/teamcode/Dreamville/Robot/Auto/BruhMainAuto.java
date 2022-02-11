@@ -26,7 +26,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
 
-@Autonomous(group = "advanced")
+@Autonomous(group = "advanced", preselectTeleOp = "MainTeleOp")
 public class BruhMainAuto extends LinearOpMode {
     OpenCvCamera camera;
     DuckDetectorPipeline aprilTagDetectionPipeline;
@@ -80,7 +80,7 @@ public class BruhMainAuto extends LinearOpMode {
     ElapsedTime eTime = new ElapsedTime();
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         FtcDashboard dashboard = FtcDashboard.getInstance();
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -111,7 +111,7 @@ public class BruhMainAuto extends LinearOpMode {
             }
         });
 
-        AutoCarousel carousel = new AutoCarousel(hardwareMap);
+        AutoCarousel carousel = new AutoCarousel(hardwareMap, -1);
         AutoElevator elevator = new AutoElevator(hardwareMap);
         AutoIntake intake = new AutoIntake(hardwareMap);
 
@@ -210,6 +210,7 @@ public class BruhMainAuto extends LinearOpMode {
                 case PARK:
                     if (!drive.isBusy()) {
                         currentState = State.IDLE;
+                        elevator.goToGround();
                     }
                     break;
                 case IDLE:
@@ -225,6 +226,7 @@ public class BruhMainAuto extends LinearOpMode {
 
             TelemetryPacket packet = new TelemetryPacket();
 
+            packet.put("imuRead", PoseStorage.currentHeading);
             packet.put("x", poseEstimate.getX());
             packet.put("y", poseEstimate.getY());
             packet.put("heading", poseEstimate.getHeading());

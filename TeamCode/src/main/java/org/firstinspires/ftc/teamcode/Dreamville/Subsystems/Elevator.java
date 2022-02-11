@@ -9,10 +9,10 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Config
 public class Elevator {
-    public static int drivingPos = -1000;
+    public static int drivingPos = -800;
     public static int bottomPos = -1600;
-    public static int middlePos = -3800;
-    public static int topPos = -4600;
+    public static int middlePos = -3600;
+    public static int topPos = -5200;
     public static double P = 0.005;
     public static double ltDelay = 0.5;
 

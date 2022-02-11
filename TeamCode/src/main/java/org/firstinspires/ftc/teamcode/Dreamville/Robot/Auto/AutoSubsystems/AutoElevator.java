@@ -11,9 +11,9 @@ import java.util.Map;
 public class AutoElevator {
     private static final Map<String, Object> telemetry = new LinkedHashMap<>();
 
-    public static int bottomPos = -500;
-    public static int middlePos = -1900;
-    public static int topPos = -2500;
+    public static int bottomPos = -1600;
+    public static int middlePos = -3600;
+    public static int topPos = -5200;
     public static int errorTolerance = 10;
     public static double P = 0.005;
 

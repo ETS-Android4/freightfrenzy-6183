@@ -1,12 +1,11 @@
 package org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Dreamville.AutoFunctions;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
 @Autonomous
 public class MainAuto extends AutoFunctions {
@@ -20,10 +19,11 @@ public class MainAuto extends AutoFunctions {
 
         drive.setPoseEstimate(startPose);
 
-        TrajectorySequence trajectory1 = drive.trajectorySequenceBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-51, 56, Math.toRadians(0)), Math.toRadians(180))
+        Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
+                .lineToLinearHeading(new Pose2d(-51, 56, Math.toRadians(0)))
                 .build();
 
+        /*
         TrajectorySequence trajectory2 = drive.trajectorySequenceBuilder(trajectory1.end())
                 .lineToConstantHeading(new Vector2d(-54, 24))
                 .splineToConstantHeading(new Vector2d(-30, 24), Math.toRadians(0))
@@ -58,17 +58,23 @@ public class MainAuto extends AutoFunctions {
                 .lineToConstantHeading(new Vector2d(40, 64))
                 .build();
 
+         */
+
         waitForStart();
 
-        if(isStopRequested()) return;
+        if (isStopRequested()) return;
 
-        drive.followTrajectorySequence(trajectory1);
+        drive.followTrajectory(trajectory1);
+
+        /*
         drive.followTrajectorySequence(trajectory2);
         drive.followTrajectorySequence(trajectory3);
         drive.followTrajectorySequence(trajectory4);
         drive.followTrajectorySequence(trajectory5);
         drive.followTrajectorySequence(trajectory6);
         drive.followTrajectorySequence(park);
+
+         */
 
         //raiseOdometry();
     }

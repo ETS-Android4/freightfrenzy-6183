@@ -16,7 +16,7 @@ public class AutoTester extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         FtcDashboard dashboard = FtcDashboard.getInstance();
 
-        AutoCarousel carousel = new AutoCarousel(hardwareMap);
+        AutoCarousel carousel = new AutoCarousel(hardwareMap, -1);
         AutoElevator elevator = new AutoElevator(hardwareMap);
         AutoIntake intake = new AutoIntake(hardwareMap);
 
