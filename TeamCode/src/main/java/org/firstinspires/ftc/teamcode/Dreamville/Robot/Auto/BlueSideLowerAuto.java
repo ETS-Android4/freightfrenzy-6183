@@ -101,7 +101,7 @@ public class BlueSideLowerAuto extends LinearOpMode {
     State currentState = State.IDLE;
 
     // Define our start pose
-    Pose2d startPose = new Pose2d(-28.5, 62.5, Math.toRadians(270));
+    Pose2d startPose = new Pose2d(-33.25, 62.5, Math.toRadians(270));
 
     ElapsedTime eTime = new ElapsedTime();
 
@@ -137,7 +137,7 @@ public class BlueSideLowerAuto extends LinearOpMode {
         drive.setPoseEstimate(startPose);
 
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
-                .splineToLinearHeading(new Pose2d(-55, 57, Math.toRadians(0)), Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(-54, 57, Math.toRadians(0)), Math.toRadians(180))
                 .build();
 
         while (!isStarted() && !isStopRequested()) {
@@ -189,12 +189,12 @@ public class BlueSideLowerAuto extends LinearOpMode {
 
         camera.pauseViewport();
         if (tagOfInterest == null) {
-            tagPos = 3;
+            tagPos = 1;
         } else {
-            if (tagOfInterest.pose.x > 0) {
+            if (tagOfInterest.pose.x > 0.5) {
+                tagPos = 3;
+            } else if (tagOfInterest.pose.x < 0.5) {
                 tagPos = 2;
-            } else if (tagOfInterest.pose.x < 0) {
-                tagPos = 1;
             }
         }
 
@@ -378,15 +378,5 @@ public class BlueSideLowerAuto extends LinearOpMode {
         packet.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
         packet.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
         packet.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
-
-        /*
-        telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
-        telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y * FEET_PER_METER));
-        telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z * FEET_PER_METER));
-        telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
-        telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
-        telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
-         */
     }
 }

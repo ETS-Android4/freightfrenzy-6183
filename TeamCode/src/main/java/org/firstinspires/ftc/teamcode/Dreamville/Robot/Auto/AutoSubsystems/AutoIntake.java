@@ -28,7 +28,8 @@ public class AutoIntake {
         INTAKE,
         DEPOSIT,
         STUCK,
-        CLEAR
+        CLEAR,
+        WAIT
     }
 
     private intakeMode intakeState = intakeMode.IDLE;
@@ -55,8 +56,9 @@ public class AutoIntake {
             case INTAKE:
                 intake.setPower(1);
 
-                if (distance < 4.5) {
-                    intakeState = intakeMode.IDLE;
+                if (distance < 4.2) {
+                    eTime.reset();
+                    intakeState = intakeMode.WAIT;
                 }
                 break;
             case DEPOSIT:
@@ -65,7 +67,7 @@ public class AutoIntake {
                     eTime.reset();
                     intakeState = intakeMode.STUCK;
                 } else {
-                    intake.setPower(-1/ltDivisor);
+                    intake.setPower(-1 / ltDivisor);
 
                     if (distance > 4.5) {
                         intakeState = intakeMode.IDLE;
@@ -79,12 +81,16 @@ public class AutoIntake {
                 }
                 break;
             case CLEAR:
-                intake.setPower(-1/ltDivisor);
+                intake.setPower(-1 / ltDivisor);
                 if (distance > 4.5) {
                     stuck = false;
                     intakeState = intakeMode.IDLE;
                 }
                 break;
+            case WAIT:
+                if (eTime.seconds() > 0.1) {
+                    intakeState = intakeMode.IDLE;
+                }
         }
     }
 
