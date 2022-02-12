@@ -41,7 +41,7 @@ import java.util.ArrayList;
  * to supercharge your code. This can be much cleaner by abstracting many of these things. This
  * opmode only serves as an initial starting point.
  */
-@Autonomous(name = "blueSideUpperAuto", group = "advanced")
+@Autonomous(name = "blueSideUpperAuto", group = "advanced", preselectTeleOp = "MainTeleOp")
 public class BlueSideUpperAuto extends LinearOpMode {
     OpenCvCamera camera;
     DuckDetectorPipeline aprilTagDetectionPipeline;

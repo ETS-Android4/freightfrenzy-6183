@@ -13,44 +13,21 @@ public class MeepMeepTesting {
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setDimensions(10, 15)
-                .setConstraints(52.48291908330528, 52.48291908330528, Math.toRadians(300.704976), Math.toRadians(300.704976), 12.3)
+                .setConstraints(35, 35, Math.toRadians(360), Math.toRadians(360), 10.1)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(new Pose2d(-23, 62.5, Math.toRadians(270)))
-                                .splineToLinearHeading(new Pose2d(-54, 59, Math.toRadians(0)), Math.toRadians(180))
-                                .addTemporalMarker(() -> {
-                                    //autoSpinCarousel();
-                                })
-                                .lineToConstantHeading(new Vector2d(-54, 24))
-                                .splineToConstantHeading(new Vector2d(-30, 24), Math.toRadians(0))
-                                .addTemporalMarker(() -> {
-                                    //depositFreight();
-                                })
-                                .lineToConstantHeading(new Vector2d(-30, 16))
-                                .splineToConstantHeading(new Vector2d(10, 16), Math.toRadians(90))
-                                .lineToConstantHeading(new Vector2d(10, 64))
-                                .lineToConstantHeading(new Vector2d(56, 64))
-                                .addTemporalMarker(() -> {
-                                    //pickupFreight();
-                                })
-                                .lineToConstantHeading(new Vector2d(18, 64))
-                                .splineToConstantHeading(new Vector2d(10, 60), Math.toRadians(270))
-                                .splineToSplineHeading(new Pose2d(7, 24, Math.toRadians(180)), Math.toRadians(270))
-                                .addTemporalMarker(() -> {
-                                    //depositFreight();
-                                })
-                                .splineToSplineHeading(new Pose2d(10, 64, Math.toRadians(0)), Math.toRadians(90))
-                                .lineToConstantHeading(new Vector2d(56, 64))
-                                .addTemporalMarker(() -> {
-                                    //pickupFreight();
-                                })
-                                .lineToConstantHeading(new Vector2d(18, 64))
-                                .splineToConstantHeading(new Vector2d(10, 60), Math.toRadians(270))
-                                .splineToSplineHeading(new Pose2d(7, 24, Math.toRadians(180)), Math.toRadians(270))
-                                .addTemporalMarker(() -> {
-                                    //depositFreight();
-                                })
-                                .splineToSplineHeading(new Pose2d(10, 64, Math.toRadians(0)), Math.toRadians(90))
-                                .lineToConstantHeading(new Vector2d(40, 64))
+                        drive.trajectorySequenceBuilder(new Pose2d(11.75, -62.5, Math.toRadians(90)))
+                                .splineToConstantHeading(new Vector2d(-8, -44), Math.toRadians(90))
+                                .lineToLinearHeading(new Pose2d(10, -65, Math.toRadians(0)))
+                                .lineToConstantHeading(new Vector2d(64, -65))
+                                .lineToConstantHeading(new Vector2d(10, -65))
+                                .splineToSplineHeading(new Pose2d(-8, -44, Math.toRadians(90)), Math.toRadians(90))
+                                .lineToLinearHeading(new Pose2d(10, -65, Math.toRadians(0)))
+                                .lineToConstantHeading(new Vector2d(64, -65))
+                                .lineToConstantHeading(new Vector2d(10, -65))
+                                .splineToSplineHeading(new Pose2d(-8, -44, Math.toRadians(90)), Math.toRadians(90))
+                                .lineToLinearHeading(new Pose2d(10, -65, Math.toRadians(0)))
+                                .lineToConstantHeading(new Vector2d(40, -65))
+                                .lineToLinearHeading(new Pose2d(40, -45, Math.toRadians(90)))
                                 .build()
                 );
 
