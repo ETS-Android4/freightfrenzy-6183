@@ -28,6 +28,8 @@ public class AutoCapper {
     }
 
     public void update() {
+        cap.setPosition(0);
+        /*
         switch (capState) {
             case UP:
                 if (upPos != lastPos) {
@@ -42,6 +44,8 @@ public class AutoCapper {
                 lastPos = downPos;
                 break;
         }
+
+         */
     }
 
     public void raise() {

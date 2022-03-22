@@ -41,7 +41,7 @@ import java.util.ArrayList;
  * to supercharge your code. This can be much cleaner by abstracting many of these things. This
  * opmode only serves as an initial starting point.
  */
-@Autonomous(name = "redSideLowerAuto", group = "advanced")
+@Autonomous(name = "redSideLowerAuto", group = "advanced", preselectTeleOp = "RedTeleOp")
 public class RedSideLowerAuto extends LinearOpMode {
     OpenCvCamera camera;
     DuckDetectorPipeline aprilTagDetectionPipeline;
@@ -54,13 +54,29 @@ public class RedSideLowerAuto extends LinearOpMode {
     double fy = 1051.06561;
 
     int tagPos = 0;
+    double tagX = 0;
+    boolean tagDetected = false;
 
     // UNITS ARE METERS
     double tagSize = 0.075;
 
-    int ID_TAG_OF_INTEREST = 1; // Tag ID 1 from the 36h11 family
+    int ID_TAG_OF_INTEREST = 1; // Tag ID 18 from the 36h11 family
 
     AprilTagDetection tagOfInterest = null;
+
+    // This enum defines our "state"
+    // This is essentially just defines the possible steps our program will take
+    /*
+    enum State {
+        TRAJECTORY_1,   // First, follow a splineTo() trajectory
+        TRAJECTORY_2,   // Then, follow a lineTo() trajectory
+        TURN_1,         // Then we want to do a point turn
+        TRAJECTORY_3,   // Then, we follow another lineTo() trajectory
+        WAIT_1,         // Then we're gonna wait a second
+        TURN_2,         // Finally, we're gonna turn again
+        IDLE            // Our bot will enter the IDLE state when done
+    }
+     */
 
     enum State {
         TRAJECTORY_1,
@@ -87,7 +103,7 @@ public class RedSideLowerAuto extends LinearOpMode {
     State currentState = State.IDLE;
 
     // Define our start pose
-    Pose2d startPose = new Pose2d(-28.5, -62.5, Math.toRadians(90));
+    Pose2d startPose = new Pose2d(-33.25, -62.5, Math.toRadians(90));
 
     ElapsedTime eTime = new ElapsedTime();
 
@@ -123,7 +139,7 @@ public class RedSideLowerAuto extends LinearOpMode {
         drive.setPoseEstimate(startPose);
 
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
-                .splineToConstantHeading(new Vector2d(-54, -57), Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(-54, -57, Math.toRadians(90)), Math.toRadians(180))
                 .build();
 
         while (!isStarted() && !isStopRequested()) {
@@ -138,6 +154,7 @@ public class RedSideLowerAuto extends LinearOpMode {
                     if (tag.id == ID_TAG_OF_INTEREST) {
                         tagOfInterest = tag;
                         tagFound = true;
+                        tagDetected = true;
                         break;
                     }
                 }
@@ -158,6 +175,7 @@ public class RedSideLowerAuto extends LinearOpMode {
 
             } else {
                 packet.addLine("Don't see tag of interest :(");
+                tagDetected = false;
 
                 if (tagOfInterest == null) {
                     packet.addLine("(The tag has never been seen)");
@@ -167,21 +185,28 @@ public class RedSideLowerAuto extends LinearOpMode {
                 }
 
             }
+            if (tagDetected == false) {
+                tagPos = 3;
+                tagX = 69;
+            } else if (tagOfInterest.pose.x * FEET_PER_METER > 0.5) {
+                tagPos = 2;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            } else {
+                tagPos = 1;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            }
 
             dashboard.sendTelemetryPacket(packet);
         }
 
         if (isStopRequested()) return;
 
-        camera.pauseViewport();
-        if (tagOfInterest == null) {
-            tagPos = 1;
+        if (tagPos == 1) {
+            elevator.goToBottom();
+        } else if (tagPos == 2) {
+            elevator.goToMiddle();
         } else {
-            if (tagOfInterest.pose.x > 0) {
-                tagPos = 2;
-            } else if (tagOfInterest.pose.x < 0) {
-                tagPos = 3;
-            }
+            elevator.goToTop();
         }
 
         // Set the current state to TRAJECTORY_1, our first step
@@ -194,6 +219,7 @@ public class RedSideLowerAuto extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
+            PoseStorage.currentHeading = Math.toDegrees(poseEstimate.getHeading() - startPose.getHeading());
             switch (currentState) {
                 case TRAJECTORY_1:
                     if (!drive.isBusy()) {
@@ -209,11 +235,6 @@ public class RedSideLowerAuto extends LinearOpMode {
                                 .splineToSplineHeading(new Pose2d(-28, -24, Math.toRadians(0)), Math.toRadians(0))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory2);
-                    }
-                    break;
-                case TRAJECTORY_2:
-                    if (!drive.isBusy()) {
-                        currentState = State.DEPOSIT_1;
                         if (tagPos == 1) {
                             elevator.goToBottom();
                         } else if (tagPos == 2) {
@@ -223,19 +244,25 @@ public class RedSideLowerAuto extends LinearOpMode {
                         }
                     }
                     break;
+                case TRAJECTORY_2:
+                    if (!drive.isBusy() && !elevator.isBusy()) {
+                        currentState = State.DEPOSIT_1;
+                    }
+                    break;
                 case DEPOSIT_1:
                     if (!elevator.isBusy()) {
-                        currentState = State.OUTTAKE_1;
+                        currentState = State.OUTTAKE_2;
                         intake.deposit();
                     }
                     break;
+                /*
                 case OUTTAKE_1:
                     if (!intake.isBusy()) {
                         currentState = State.TRAJECTORY_3;
                         TrajectorySequence trajectory3 = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToConstantHeading(new Vector2d(-30, -10))
-                                .splineToConstantHeading(new Vector2d(8, -10), Math.toRadians(270))
-                                .lineToConstantHeading(new Vector2d(10, -65))
+                                .lineToConstantHeading(new Vector2d(-30, 10))
+                                .splineToConstantHeading(new Vector2d(8, 10), Math.toRadians(90))
+                                .lineToConstantHeading(new Vector2d(10, 65))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory3);
                         elevator.goToBottom();
@@ -245,7 +272,7 @@ public class RedSideLowerAuto extends LinearOpMode {
                     if (!drive.isBusy()) {
                         currentState = State.PICKUP_1;
                         TrajectorySequence pickup = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToConstantHeading(new Vector2d(70, -65))
+                                .lineToConstantHeading(new Vector2d(70, 65))
                                 .build();
                         drive.followTrajectorySequenceAsync(pickup);
                         elevator.goToGround();
@@ -257,16 +284,18 @@ public class RedSideLowerAuto extends LinearOpMode {
                         currentState = State.TRAJECTORY_4;
                         drive.breakFollowing();
                         TrajectorySequence trajectory4 = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToConstantHeading(new Vector2d(8, -65))
-                                .splineToSplineHeading(new Pose2d(4, -24, Math.toRadians(180)), Math.toRadians(270))
+                                .waitSeconds(0.5)
+                                .lineToConstantHeading(new Vector2d(18, 65))
+                                .splineToConstantHeading(new Vector2d(8, 65), Math.toRadians(270))
+                                .splineToSplineHeading(new Pose2d(12, 24, Math.toRadians(180)), Math.toRadians(270))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory4);
-                        elevator.goToMiddle();
                     }
                     break;
                 case TRAJECTORY_4:
                     if (!drive.isBusy()) {
                         currentState = State.DEPOSIT_2;
+                        elevator.goToMiddle();
                     }
                     break;
                 case DEPOSIT_2:
@@ -275,55 +304,16 @@ public class RedSideLowerAuto extends LinearOpMode {
                         intake.deposit();
                     }
                     break;
+
+                 */
                 case OUTTAKE_2:
-                    if (!intake.isBusy()) {
-                        currentState = State.TRAJECTORY_5;
-                        TrajectorySequence trajectory5 = drive.trajectorySequenceBuilder(poseEstimate)
-                                .splineToSplineHeading(new Pose2d(10, -64, Math.toRadians(0)), Math.toRadians(90))
-                                .lineToConstantHeading(new Vector2d(70, -64))
-                                .build();
-                        drive.followTrajectorySequenceAsync(trajectory5);
-                        elevator.goToBottom();
-                    }
-                    break;
-                case TRAJECTORY_5:
-                    if (!drive.isBusy()) {
-                        currentState = State.PICKUP_2;
-                    }
-                    break;
-                case PICKUP_2:
-                    if (!drive.isBusy()) {
-                        currentState = State.TRAJECTORY_6;
-                        TrajectorySequence trajectory6 = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToConstantHeading(new Vector2d(18, -64))
-                                .splineToConstantHeading(new Vector2d(8, -64), Math.toRadians(270))
-                                .splineToSplineHeading(new Pose2d(12, -24, Math.toRadians(180)), Math.toRadians(270))
-                                .build();
-                        drive.followTrajectorySequenceAsync(trajectory6);
-                    }
-                    break;
-                case TRAJECTORY_6:
-                    if (!drive.isBusy()) {
-                        currentState = State.DEPOSIT_3;
-                        elevator.goToMiddle();
-                    }
-                    break;
-                case DEPOSIT_3:
-                    if (!elevator.isBusy()) {
-                        currentState = State.OUTTAKE_3;
-                        intake.deposit();
-                    }
-                    break;
-                case OUTTAKE_3:
                     if (!intake.isBusy()) {
                         currentState = State.PARK;
                         TrajectorySequence park = drive.trajectorySequenceBuilder(poseEstimate)
-                                .waitSeconds(0.5)
-                                .splineToSplineHeading(new Pose2d(10, -64, Math.toRadians(0)), Math.toRadians(90))
-                                .lineToConstantHeading(new Vector2d(70, -64))
+                                .lineToLinearHeading(new Pose2d(-56, -36, Math.toRadians(90)))
                                 .build();
                         drive.followTrajectorySequenceAsync(park);
-                        elevator.goToBottom();
+                        elevator.goToGround();
                     }
                     break;
                 case PARK:

@@ -159,16 +159,16 @@ public class Drivetrain {
             case AUTO_CONTROL:
                 if (!g1rb) {
                     if (g1du) {
-                        desiredAngle = 0 - PoseStorage.currentHeading;
+                        desiredAngle = 0 + PoseStorage.currentHeading;
                     }
                     if (g1dr) {
-                        desiredAngle = 270 - PoseStorage.currentHeading;
+                        desiredAngle = 270 + PoseStorage.currentHeading;
                     }
                     if (g1dd) {
-                        desiredAngle = 180 - PoseStorage.currentHeading;
+                        desiredAngle = 180 + PoseStorage.currentHeading;
                     }
                     if (g1dl) {
-                        desiredAngle = 90 - PoseStorage.currentHeading;
+                        desiredAngle = 90 + PoseStorage.currentHeading;
                     }
                 }
                 if (rightStickX != 0) {
@@ -190,19 +190,19 @@ public class Drivetrain {
                 RR_power = (-newForward + newStrafe - rightStickX) / denominator;
                 if (!g1rb) {
                     if (g1du) {
-                        desiredAngle = 0 - PoseStorage.currentHeading;
+                        desiredAngle = 0 + PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dr) {
-                        desiredAngle = 270 - PoseStorage.currentHeading;
+                        desiredAngle = 270 + PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dd) {
-                        desiredAngle = 180 - PoseStorage.currentHeading;
+                        desiredAngle = 180 + PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                     if (g1dl) {
-                        desiredAngle = 90 - PoseStorage.currentHeading;
+                        desiredAngle = 90 + PoseStorage.currentHeading;
                         driveState = driveMode.AUTO_CONTROL;
                     }
                 }

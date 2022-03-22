@@ -39,7 +39,7 @@ import java.util.ArrayList;
  * to supercharge your code. This can be much cleaner by abstracting many of these things. This
  * opmode only serves as an initial starting point.
  */
-@Autonomous(name = "blueCyclingAuto", group = "advanced", preselectTeleOp = "MainTeleOp")
+@Autonomous(name = "blueCyclingAuto", group = "advanced", preselectTeleOp = "BlueTeleOp")
 public class BlueCyclingAuto extends LinearOpMode {
     OpenCvCamera camera;
     DuckDetectorPipeline aprilTagDetectionPipeline;
@@ -52,9 +52,11 @@ public class BlueCyclingAuto extends LinearOpMode {
     double fy = 1051.06561;
 
     int tagPos = 0;
+    double tagX = 0;
 
     // UNITS ARE METERS
     double tagSize = 0.075;
+    boolean tagDetected = false;
 
     int ID_TAG_OF_INTEREST = 1; // Tag ID 1 from the 36h11 family
 
@@ -112,7 +114,7 @@ public class BlueCyclingAuto extends LinearOpMode {
         drive.setPoseEstimate(startPose);
 
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
-                .splineToConstantHeading(new Vector2d(-8, 44), Math.toRadians(270))
+                .splineToConstantHeading(new Vector2d(-12, 42.5), Math.toRadians(180))
                 .build();
 
         while (!isStarted() && !isStopRequested()) {
@@ -127,6 +129,7 @@ public class BlueCyclingAuto extends LinearOpMode {
                     if (tag.id == ID_TAG_OF_INTEREST) {
                         tagOfInterest = tag;
                         tagFound = true;
+                        tagDetected = true;
                         break;
                     }
                 }
@@ -147,6 +150,7 @@ public class BlueCyclingAuto extends LinearOpMode {
 
             } else {
                 packet.addLine("Don't see tag of interest :(");
+                tagDetected = false;
 
                 if (tagOfInterest == null) {
                     packet.addLine("(The tag has never been seen)");
@@ -156,21 +160,28 @@ public class BlueCyclingAuto extends LinearOpMode {
                 }
 
             }
+            if (!tagDetected) {
+                tagPos = 3;
+                tagX = 69;
+            } else if (tagOfInterest.pose.x * FEET_PER_METER > 0.5) {
+                tagPos = 2;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            } else {
+                tagPos = 1;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            }
 
             dashboard.sendTelemetryPacket(packet);
         }
 
         if (isStopRequested()) return;
 
-        camera.pauseViewport();
-        if (tagOfInterest == null) {
-            tagPos = 3;
+        if (tagPos == 1) {
+            elevator.goToBottom();
+        } else if (tagPos == 2) {
+            elevator.goToMiddle();
         } else {
-            if (tagOfInterest.pose.x > 0.5) {
-                tagPos = 2;
-            } else if (tagOfInterest.pose.x < 0.5) {
-                tagPos = 1;
-            }
+            elevator.goToTop();
         }
 
         currentState = State.TRAJECTORY_1;
@@ -179,17 +190,10 @@ public class BlueCyclingAuto extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
+            PoseStorage.currentHeading = Math.toDegrees(poseEstimate.getHeading() - startPose.getHeading());
             switch (currentState) {
                 case TRAJECTORY_1:
-                    if (tagPos == 1) {
-                        elevator.goToBottom();
-                    } else if (tagPos == 2) {
-                        elevator.goToMiddle();
-                    } else {
-                        elevator.goToTop();
-                    }
-
-                    if (!drive.isBusy()) {
+                    if (!drive.isBusy() && !elevator.isBusy()) {
                         currentState = State.DEPOSIT_1;
                     }
                     break;
@@ -225,7 +229,7 @@ public class BlueCyclingAuto extends LinearOpMode {
                         drive.breakFollowing();
                         TrajectorySequence trajectory4 = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToConstantHeading(new Vector2d(10, 65))
-                                .splineToSplineHeading(new Pose2d(-8, 44, Math.toRadians(270)), Math.toRadians(270))
+                                .splineToSplineHeading(new Pose2d(-10, 42, Math.toRadians(270)), Math.toRadians(180))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory4);
                         elevator.goToTop();
@@ -240,31 +244,33 @@ public class BlueCyclingAuto extends LinearOpMode {
                 case OUTTAKE_2:
                     if (!intake.isBusy()) {
                         currentState = State.TRAJECTORY_3;
-                        TrajectorySequence trajectory5 = drive.trajectorySequenceBuilder(poseEstimate)
+                        TrajectorySequence trajectory3 = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToLinearHeading(new Pose2d(10, 65, Math.toRadians(0)))
                                 .build();
-                        drive.followTrajectorySequenceAsync(trajectory5);
+                        drive.followTrajectorySequenceAsync(trajectory3);
                         elevator.goToGround();
+                        intake.intake();
                     }
                     break;
                 case TRAJECTORY_3:
                     if (!drive.isBusy()) {
                         currentState = State.PICKUP_2;
-                        TrajectorySequence trajectory6 = drive.trajectorySequenceBuilder(poseEstimate)
+                        TrajectorySequence pickup = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToConstantHeading(new Vector2d(70, 65))
                                 .build();
-                        drive.followTrajectorySequenceAsync(trajectory6);
+                        drive.followTrajectorySequenceAsync(pickup);
                         intake.intake();
                     }
+                    break;
                 case PICKUP_2:
                     if (!intake.isBusy()) {
                         currentState = State.DEPOSIT_3;
                         drive.breakFollowing();
-                        TrajectorySequence trajectory6 = drive.trajectorySequenceBuilder(poseEstimate)
+                        TrajectorySequence trajectory4 = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToConstantHeading(new Vector2d(10, 65))
-                                .splineToSplineHeading(new Pose2d(-8, 44, Math.toRadians(270)), Math.toRadians(270))
+                                .splineToSplineHeading(new Pose2d(-10, 42, Math.toRadians(270)), Math.toRadians(180))
                                 .build();
-                        drive.followTrajectorySequenceAsync(trajectory6);
+                        drive.followTrajectorySequenceAsync(trajectory4);
                         elevator.goToTop();
                     }
                     break;
@@ -278,12 +284,13 @@ public class BlueCyclingAuto extends LinearOpMode {
                     if (!intake.isBusy()) {
                         currentState = State.PARK;
                         TrajectorySequence park = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToLinearHeading(new Pose2d(10, 65, Math.toRadians(0)))
-                                .lineToConstantHeading(new Vector2d(40, 65))
-                                .lineToLinearHeading(new Pose2d(40, 45, Math.toRadians(270)))
+                                .lineToLinearHeading(new Pose2d(12, 65, Math.toRadians(0)))
+                                .splineToConstantHeading(new Vector2d(40, 55), Math.toRadians(270))
+                                //.lineToLinearHeading(new Pose2d(40, -55, Math.toRadians(90)))
+                                .turn(Math.toRadians(90))
                                 .build();
                         drive.followTrajectorySequenceAsync(park);
-                        elevator.goToBottom();
+                        elevator.goToGround();
                     }
                     break;
                 case PARK:
@@ -304,11 +311,11 @@ public class BlueCyclingAuto extends LinearOpMode {
             TelemetryPacket packet = drive.getPacket();
 
             packet.put("tagPos", tagPos);
+            packet.put("tagX", tagX);
 
             packet.putAll(carousel.getTelemetry());
             packet.putAll(elevator.getTelemetry());
             packet.putAll(intake.getTelemetry());
-
             dashboard.sendTelemetryPacket(packet);
         }
     }

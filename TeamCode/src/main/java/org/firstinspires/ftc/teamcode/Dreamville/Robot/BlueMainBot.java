@@ -14,8 +14,8 @@ import org.firstinspires.ftc.teamcode.Dreamville.Subsystems.Elevator;
 import org.firstinspires.ftc.teamcode.Dreamville.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.Dreamville.Subsystems.Rumbler;
 
-@TeleOp(name = "MainTeleOp", group = "tele")
-public class MainBot extends LinearOpMode {
+@TeleOp(name = "BlueTeleOp", group = "tele")
+public class BlueMainBot extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -24,7 +24,7 @@ public class MainBot extends LinearOpMode {
         MultipleTelemetry multiTelemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         Drivetrain drivetrain = new Drivetrain(hardwareMap);
-        Carousel carousel = new Carousel(hardwareMap);
+        Carousel carousel = new Carousel(hardwareMap, -1);
         Intake intake = new Intake(hardwareMap);
         Elevator elevator = new Elevator(hardwareMap);
         Capper capper = new Capper(hardwareMap);

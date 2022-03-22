@@ -18,6 +18,7 @@ public class Carousel {
     public static double fastTime = 0.4;
 
     private static int carouselStartPos = 0;
+    private static int carouselFlipper = -1;
 
     private static DcMotor c;
 
@@ -32,10 +33,12 @@ public class Carousel {
 
     private final ElapsedTime carouselTime = new ElapsedTime();
 
-    public Carousel(HardwareMap hardwareMap) {
+    public Carousel(HardwareMap hardwareMap, int flipper) {
         c = hardwareMap.get(DcMotor.class, "carousel");
         c.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         c.setDirection(DcMotor.Direction.REVERSE);
+
+        carouselFlipper = flipper;
 
         carouselStartPos = c.getCurrentPosition();
     }
@@ -67,7 +70,7 @@ public class Carousel {
             case SLOW:
                 if (g1rb) {
                     if (Math.abs(c.getCurrentPosition()-carouselStartPos) < carouselEncoder) {
-                        c.setPower(-carouselPower);
+                        c.setPower(carouselPower * carouselFlipper);
                     } else {
                         carouselState = carouselMode.FAST;
                         carouselTime.reset();
@@ -79,7 +82,7 @@ public class Carousel {
             case FAST:
                 if (g1rb) {
                     if (carouselTime.time()<fastTime) {
-                        c.setPower(-1);
+                        c.setPower(carouselFlipper);
                     } else {
                         carouselState = carouselMode.BRAKING;
                         carouselTime.reset();

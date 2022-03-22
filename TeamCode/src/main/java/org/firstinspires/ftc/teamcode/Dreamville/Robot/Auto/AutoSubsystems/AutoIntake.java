@@ -18,7 +18,8 @@ public class AutoIntake {
 
     private static DcMotor intake;
     private static RevColorSensorV3 colorSensor;
-    public static double ltDivisor = 2;
+    public static double ltDivisor = 1.5;
+    public static double intakeThreshold = 4;
     public static double stuckPower = 0.20;
     public static double stuckTime = 0.5;
     private static boolean stuck = false;
@@ -54,41 +55,41 @@ public class AutoIntake {
                 intake.setPower(0);
                 break;
             case INTAKE:
-                intake.setPower(1);
+                intake.setPower(0.8);
 
-                if (distance < 4.2) {
+                if (distance < intakeThreshold) {
                     eTime.reset();
                     intakeState = intakeMode.WAIT;
                 }
                 break;
             case DEPOSIT:
-                if (distance > 4.5) {
+                if (distance > 4.2) {
                     stuck = true;
                     eTime.reset();
                     intakeState = intakeMode.STUCK;
                 } else {
                     intake.setPower(-1 / ltDivisor);
 
-                    if (distance > 4.5) {
+                    if (distance > 4.2) {
                         intakeState = intakeMode.IDLE;
                     }
                 }
                 break;
             case STUCK:
                 intake.setPower(-stuckPower);
-                if (distance < 4.5 || eTime.time() > stuckTime) {
+                if (distance < 4.2 || eTime.time() > stuckTime) {
                     intakeState = intakeMode.CLEAR;
                 }
                 break;
             case CLEAR:
                 intake.setPower(-1 / ltDivisor);
-                if (distance > 4.5) {
+                if (distance > 4.2) {
                     stuck = false;
                     intakeState = intakeMode.IDLE;
                 }
                 break;
             case WAIT:
-                if (eTime.seconds() > 0.1) {
+                if (eTime.seconds() > 0.05) {
                     intakeState = intakeMode.IDLE;
                 }
         }

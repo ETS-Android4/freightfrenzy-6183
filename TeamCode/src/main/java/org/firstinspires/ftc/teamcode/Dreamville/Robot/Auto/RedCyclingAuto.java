@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto.AutoSubsystems.AutoCapper;
 import org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto.AutoSubsystems.AutoCarousel;
 import org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto.AutoSubsystems.AutoElevator;
 import org.firstinspires.ftc.teamcode.Dreamville.Robot.Auto.AutoSubsystems.AutoIntake;
@@ -39,7 +40,7 @@ import java.util.ArrayList;
  * to supercharge your code. This can be much cleaner by abstracting many of these things. This
  * opmode only serves as an initial starting point.
  */
-@Autonomous(name = "redCyclingAuto", group = "advanced", preselectTeleOp = "MainTeleOp")
+@Autonomous(name = "redCyclingAuto", group = "advanced", preselectTeleOp = "RedTeleOp")
 public class RedCyclingAuto extends LinearOpMode {
     OpenCvCamera camera;
     DuckDetectorPipeline aprilTagDetectionPipeline;
@@ -52,6 +53,8 @@ public class RedCyclingAuto extends LinearOpMode {
     double fy = 1051.06561;
 
     int tagPos = 0;
+    double tagX = 0;
+    boolean tagDetected = false;
 
     // UNITS ARE METERS
     double tagSize = 0.075;
@@ -105,14 +108,14 @@ public class RedCyclingAuto extends LinearOpMode {
         AutoCarousel carousel = new AutoCarousel(hardwareMap, 1);
         AutoElevator elevator = new AutoElevator(hardwareMap);
         AutoIntake intake = new AutoIntake(hardwareMap);
-        //AutoCapper capper = new AutoCapper(hardwareMap);
+        AutoCapper capper = new AutoCapper(hardwareMap);
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setPoseEstimate(startPose);
 
         Trajectory trajectory1 = drive.trajectoryBuilder(startPose)
-                .splineToConstantHeading(new Vector2d(-8, -44), Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(-12, -42.5), Math.toRadians(180))
                 .build();
 
         while (!isStarted() && !isStopRequested()) {
@@ -127,6 +130,7 @@ public class RedCyclingAuto extends LinearOpMode {
                     if (tag.id == ID_TAG_OF_INTEREST) {
                         tagOfInterest = tag;
                         tagFound = true;
+                        tagDetected = true;
                         break;
                     }
                 }
@@ -147,6 +151,7 @@ public class RedCyclingAuto extends LinearOpMode {
 
             } else {
                 packet.addLine("Don't see tag of interest :(");
+                tagDetected = false;
 
                 if (tagOfInterest == null) {
                     packet.addLine("(The tag has never been seen)");
@@ -156,6 +161,16 @@ public class RedCyclingAuto extends LinearOpMode {
                 }
 
             }
+            if (!tagDetected) {
+                tagPos = 3;
+                tagX = 69;
+            } else if (tagOfInterest.pose.x * FEET_PER_METER > 0.5) {
+                tagPos = 2;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            } else {
+                tagPos = 1;
+                tagX = tagOfInterest.pose.x * FEET_PER_METER;
+            }
 
             dashboard.sendTelemetryPacket(packet);
         }
@@ -163,32 +178,23 @@ public class RedCyclingAuto extends LinearOpMode {
         if (isStopRequested()) return;
 
         camera.pauseViewport();
-        if (tagOfInterest == null) {
-            tagPos = 1;
-        } else {
-            if (tagOfInterest.pose.x > 0) {
-                tagPos = 2;
-            } else if (tagOfInterest.pose.x < 0) {
-                tagPos = 3;
-            }
-        }
 
         currentState = State.TRAJECTORY_1;
         drive.followTrajectoryAsync(trajectory1);
+        if (tagPos == 1) {
+            elevator.goToBottom();
+        } else if (tagPos == 2) {
+            elevator.goToMiddle();
+        } else {
+            elevator.goToTop();
+        }
 
         while (opModeIsActive() && !isStopRequested()) {
             Pose2d poseEstimate = drive.getPoseEstimate();
             PoseStorage.currentPose = poseEstimate;
+            PoseStorage.currentHeading = Math.toDegrees(poseEstimate.getHeading() - startPose.getHeading());
             switch (currentState) {
                 case TRAJECTORY_1:
-                    if (tagPos == 1) {
-                        elevator.goToBottom();
-                    } else if (tagPos == 2) {
-                        elevator.goToMiddle();
-                    } else {
-                        elevator.goToTop();
-                    }
-
                     if (!drive.isBusy()) {
                         currentState = State.DEPOSIT_1;
                     }
@@ -225,7 +231,7 @@ public class RedCyclingAuto extends LinearOpMode {
                         drive.breakFollowing();
                         TrajectorySequence trajectory4 = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToConstantHeading(new Vector2d(10, -65))
-                                .splineToSplineHeading(new Pose2d(-8, -44, Math.toRadians(90)), Math.toRadians(90))
+                                .splineToSplineHeading(new Pose2d(-12, -42.5, Math.toRadians(90)), Math.toRadians(180))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory4);
                         elevator.goToTop();
@@ -256,13 +262,14 @@ public class RedCyclingAuto extends LinearOpMode {
                         drive.followTrajectorySequenceAsync(trajectory6);
                         intake.intake();
                     }
+                    break;
                 case PICKUP_2:
                     if (!intake.isBusy()) {
                         currentState = State.DEPOSIT_3;
                         drive.breakFollowing();
                         TrajectorySequence trajectory6 = drive.trajectorySequenceBuilder(poseEstimate)
                                 .lineToConstantHeading(new Vector2d(10, -65))
-                                .splineToSplineHeading(new Pose2d(-8, -44, Math.toRadians(90)), Math.toRadians(90))
+                                .splineToSplineHeading(new Pose2d(-12, -42.5, Math.toRadians(90)), Math.toRadians(180))
                                 .build();
                         drive.followTrajectorySequenceAsync(trajectory6);
                         elevator.goToTop();
@@ -278,12 +285,13 @@ public class RedCyclingAuto extends LinearOpMode {
                     if (!intake.isBusy()) {
                         currentState = State.PARK;
                         TrajectorySequence park = drive.trajectorySequenceBuilder(poseEstimate)
-                                .lineToLinearHeading(new Pose2d(10, -65, Math.toRadians(0)))
-                                .lineToConstantHeading(new Vector2d(40, -65))
-                                .lineToLinearHeading(new Pose2d(40, -45, Math.toRadians(90)))
+                                .lineToLinearHeading(new Pose2d(12, -65, Math.toRadians(0)))
+                                .splineToConstantHeading(new Vector2d(40, -55), Math.toRadians(90))
+                                //.lineToLinearHeading(new Pose2d(40, -55, Math.toRadians(90)))
+                                .turn(Math.toRadians(90))
                                 .build();
                         drive.followTrajectorySequenceAsync(park);
-                        elevator.goToBottom();
+                        elevator.goToGround();
                     }
                     break;
                 case PARK:
@@ -299,7 +307,7 @@ public class RedCyclingAuto extends LinearOpMode {
             carousel.update();
             elevator.update();
             intake.update();
-            //capper.update();
+            capper.update();
 
             TelemetryPacket packet = drive.getPacket();
 
